@@ -6,7 +6,7 @@ import jwt
 
 def encode_jwt(
     payload: dict,
-    private_key: str = settings.private_key_path.read_text(),
+    private_key: str = settings.private_key,
     algorithm: str = settings.algorithm,
     expire_minutes: int = settings.access_token_expire_minutes,
     expire_timedelta: timedelta | None = None,
@@ -32,7 +32,7 @@ def encode_jwt(
 
 def decode_jwt(
     token: str | bytes,
-    public_key: str = settings.public_key_path.read_text(),
+    public_key: str = settings.public_key,
     algorithm: str = settings.algorithm,
 ) -> dict:
     decoded = jwt.decode(
