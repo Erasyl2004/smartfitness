@@ -23,6 +23,10 @@ class OtpService(ABC):
         ...
 
     @abstractmethod
+    async def send_otp_code_by_api(self, receiver_email: str, code: str):
+        ...
+
+    @abstractmethod
     async def process_registration_otp(self, user: UserDTO) -> OtpSuccessDTO:
         ...
 

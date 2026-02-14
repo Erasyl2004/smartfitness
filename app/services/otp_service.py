@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from ssl import SSLContext
 from typing import ClassVar
 import aiosmtplib
+import httpx
 
 
 @dataclass(eq=False)
@@ -27,6 +28,8 @@ class OtpServiceImpl(OtpService):
     otp_settings: OtpSettings
     tls_context: SSLContext
 
+    BREVO_URL: ClassVar[str] = "https://api.brevo.com/v3/smtp/email"
+    DEFAULT_BREVO_TIMEOUT: ClassVar[int] = 60
     DEFAULT_TTL_MINUTES: ClassVar[int] = 5
     DEFAULT_OTP_SUBJECT: ClassVar[str] = "Your verification code"
     GMAIL_HOST: ClassVar[str] = "smtp.gmail.com"
@@ -84,6 +87,24 @@ class OtpServiceImpl(OtpService):
             tls_context=self.tls_context
         )
 
+    async def send_otp_code_by_api(self, receiver_email: str, code: str):
+        otp_html = self.otp_template.from_template(otp_code=code)
+
+        payload = {
+            "sender": {"name": self.otp_settings.gmail_name, "email": self.otp_settings.gmail_user},
+            "to": [{"email": receiver_email}],
+            "subject": self.DEFAULT_OTP_SUBJECT,
+            "htmlContent": otp_html
+        }
+        headers = {
+            "accept": "application/json",
+            "api-key": self.otp_settings.brevo_api_key,
+            "content-type": "application/json",
+        }
+
+        async with httpx.AsyncClient(timeout=self.DEFAULT_BREVO_TIMEOUT) as client:
+            await client.post(self.BREVO_URL, json=payload, headers=headers)
+
     async def process_registration_otp(self, user: UserDTO) -> OtpSuccessDTO:
         code = generate_code()
 
@@ -91,7 +112,7 @@ class OtpServiceImpl(OtpService):
             user_id=user.id,
             code=code
         )
-        await self.send_otp_code(
+        await self.send_otp_code_by_api(
             receiver_email=str(user.email),
             code=code
         )
@@ -113,7 +134,7 @@ class OtpServiceImpl(OtpService):
             code=new_code
         )
 
-        await self.send_otp_code(
+        await self.send_otp_code_by_api(
             receiver_email=str(user.email),
             code=new_code
         )

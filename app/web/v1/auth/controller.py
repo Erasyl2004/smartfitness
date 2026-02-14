@@ -4,6 +4,7 @@ from app.security.tokens import create_access_token, create_refresh_token
 from app.dtos.users import CredentialsDTO, UserDTO
 from app.dtos.otp_codes import OtpSuccessDTO, OtpValidateDTO, OtpRequestDTO
 from app.exceptions.otp import OtpResendTooSoonException, OtpNotFoundException, OtpCodeIsNotValidException
+from app.exceptions.user import UserAlreadyExistsException
 from app.dtos.tokens import TokenDTO
 from app.security.validation import (
     get_token_payload_from_header,
@@ -30,8 +31,16 @@ async def register_user(
     user_service: FromDishka[UserService],
     otp_service: FromDishka[OtpService]
 ) -> OtpSuccessDTO:
-    user = await user_service.create_user(payload)
-    return await otp_service.process_registration_otp(user=user)
+    try:
+        user = await user_service.create_user(payload)
+        return await otp_service.process_registration_otp(user=user)
+    except UserAlreadyExistsException as e:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                'error': str(e)
+            }
+        )
 
 
 @router.post(

@@ -1,5 +1,6 @@
 from app.interfaces.services.user import UserService
 from app.interfaces.repositories.user import UserRepository
+from app.exceptions.user import UserAlreadyExistsException
 from app.security.crypto import hash_cred
 from app.dtos.users import CredentialsDTO, UserBaseDTO, UserDTO
 from app.enums.user_status import UserStatusEnum
@@ -23,6 +24,11 @@ class UserServiceImpl(UserService):
             return UserDTO.model_validate(user_entity)
 
     async def create_user(self, register_payload: CredentialsDTO) -> UserDTO:
+        is_user_exists = await self.get_user_by_email(email=str(register_payload.email))
+
+        if is_user_exists:
+            raise UserAlreadyExistsException(email=str(register_payload.email))
+
         user_base = UserBaseDTO(
             email=register_payload.email,
             password=hash_cred(cred=register_payload.password),
