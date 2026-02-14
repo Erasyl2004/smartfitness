@@ -1,5 +1,6 @@
+from app.enums.user_status import UserStatusEnum
 from app.interfaces.services.user import UserService
-from app.security.crypto import decode_jwt, validate_password
+from app.security.crypto import decode_jwt, validate_cred
 from app.dtos.users import CredentialsDTO, UserDTO
 from app.dtos.tokens import RefreshTokenInDTO
 from app.security.tokens import (
@@ -23,7 +24,7 @@ def get_token_payload(token: str) -> dict:
     except InvalidTokenError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"invalid token error: {e}",
+            detail={'error': f"invalid token error: {e}"}
         )
     return payload
 
@@ -40,7 +41,7 @@ def validate_token_type(
         return True
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=f"invalid token type {current_token_type!r} expected {token_type!r}",
+        detail={'error': f"invalid token type {current_token_type!r} expected {token_type!r}"},
     )
 
 
@@ -65,7 +66,7 @@ class UserGetterFromAccessToken:
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="token invalid (user not found)",
+            detail={'error': "token invalid (user not found)"},
         )
 
 class UserGetterFromRefreshToken:
@@ -86,11 +87,16 @@ class UserGetterFromRefreshToken:
             user = await user_service.get_user_by_email(email=email)
 
             if user:
-                return user
+                if user.status == UserStatusEnum.ACTIVE:
+                    return user
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
+                )
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="token invalid (user not found)",
+            detail={'error':"token invalid (user not found)"}
         )
 
 get_current_auth_user = UserGetterFromAccessToken(ACCESS_TOKEN_TYPE)
@@ -100,11 +106,11 @@ get_current_auth_user_for_refresh = UserGetterFromRefreshToken(REFRESH_TOKEN_TYP
 def get_current_active_auth_user(
     user: UserDTO = Depends(get_current_auth_user),
 ):
-    if user.active:
+    if user.status == UserStatusEnum.ACTIVE:
         return user
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="inactive user",
+        detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
     )
 
 @inject
@@ -114,7 +120,7 @@ async def validate_auth_user(
 ) -> UserDTO:
     unauthed_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="invalid email or password",
+        detail={'error':"invalid email or password"}
     )
 
     user = await user_service.get_user_by_email(email=str(payload.email))
@@ -122,16 +128,16 @@ async def validate_auth_user(
     if not user:
         raise unauthed_exc
 
-    if not validate_password(
-        password=payload.password,
-        hashed_password=user.password,
+    if not validate_cred(
+        cred=payload.password,
+        hashed_cred=user.password,
     ):
         raise unauthed_exc
 
-    if not user.active:
+    if user.status != UserStatusEnum.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="user inactive",
+            detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
         )
 
     return user

@@ -11,5 +11,13 @@ class UserService(ABC):
         ...
 
     @abstractmethod
+    async def get_user_by_id(self, user_id: int) -> Optional[UserDTO]:
+        ...
+
+    @abstractmethod
     async def create_user(self, register_payload: CredentialsDTO) -> UserDTO:
+        ...
+
+    @abstractmethod
+    async def activate_user(self, user_id: int) -> UserDTO:
         ...
