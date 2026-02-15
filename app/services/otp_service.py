@@ -16,7 +16,7 @@ from email.message import EmailMessage
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from ssl import SSLContext
-from typing import ClassVar
+from typing import ClassVar, Optional
 import aiosmtplib
 import httpx
 
@@ -37,6 +37,9 @@ class OtpServiceImpl(OtpService):
     TIMEOUT: ClassVar[int] = 30
     DEFAULT_RESEND_DURATION: ClassVar[timedelta] = timedelta(minutes=2)
 
+    def is_otp_resend_available(self, otp: OtpDTO, now: datetime) -> bool:
+        return otp.resend_available_at < now
+
     async def get_or_otp_by_id(self, verification_id: int) -> OtpDTO:
         otp_entity = await self.repo.get_by_id(entity_id=verification_id)
 
@@ -44,6 +47,12 @@ class OtpServiceImpl(OtpService):
             raise OtpNotFoundException(verification_id=verification_id)
 
         return OtpDTO.model_validate(otp_entity)
+
+    async def get_otp_by_user_id(self, user_id: int) -> Optional[OtpDTO]:
+        otp_entity = await self.repo.get_by_user_id(user_id=user_id)
+
+        if otp_entity:
+            return OtpDTO.model_validate(otp_entity)
 
     async def save_registration_otp(self, user_id: int, code: str) -> OtpDTO:
         base = OtpCodeBaseDTO(
@@ -105,30 +114,9 @@ class OtpServiceImpl(OtpService):
         async with httpx.AsyncClient(timeout=self.DEFAULT_BREVO_TIMEOUT) as client:
             await client.post(self.BREVO_URL, json=payload, headers=headers)
 
-    async def process_registration_otp(self, user: UserDTO) -> OtpSuccessDTO:
-        code = generate_code()
-
-        otp = await self.save_registration_otp(
-            user_id=user.id,
-            code=code
-        )
-        await self.send_otp_code_by_api(
-            receiver_email=str(user.email),
-            code=code
-        )
-
-        return OtpSuccessDTO(
-            verification_id=otp.id
-        )
-
     async def resend_otp_code(self, user: UserDTO, otp: OtpDTO) -> OtpSuccessDTO:
-        now = datetime.now()
-
-        if otp.resend_available_at > now:
-            retry_after = int((otp.resend_available_at - now).total_seconds())
-            raise OtpResendTooSoonException(retry_after=retry_after)
-
         new_code = generate_code()
+
         otp = await self.update_registration_otp_code(
             verification_id=otp.id,
             code=new_code
@@ -142,6 +130,44 @@ class OtpServiceImpl(OtpService):
         return OtpSuccessDTO(
             verification_id=otp.id
         )
+
+    async def process_registration_otp(self, user: UserDTO) -> OtpSuccessDTO:
+        otp = await self.get_otp_by_user_id(user_id=user.id)
+
+        if otp:
+            now = datetime.now()
+
+            if self.is_otp_resend_available(otp=otp, now=now):
+                return await self.resend_otp_code(user=user, otp=otp)
+            else:
+                return OtpSuccessDTO(
+                    verification_id=otp.id,
+                    resend_in=int((otp.resend_available_at - now).total_seconds())
+                )
+        else:
+            code = generate_code()
+
+            otp = await self.save_registration_otp(
+                user_id=user.id,
+                code=code
+            )
+            await self.send_otp_code_by_api(
+                receiver_email=str(user.email),
+                code=code
+            )
+
+        return OtpSuccessDTO(
+            verification_id=otp.id
+        )
+
+    async def validate_and_resend_otp_code(self, user: UserDTO, otp: OtpDTO) -> OtpSuccessDTO:
+        now = datetime.now()
+
+        if not self.is_otp_resend_available(otp=otp, now=now):
+            retry_after = int((otp.resend_available_at - now).total_seconds())
+            raise OtpResendTooSoonException(retry_after=retry_after)
+
+        return await self.resend_otp_code(user=user,otp=otp)
 
     async def confirm_registration_otp(self, request: OtpValidateDTO) -> OtpDTO:
         otp = await self.get_or_otp_by_id(verification_id=request.verification_id)
