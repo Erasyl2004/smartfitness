@@ -59,7 +59,7 @@ async def resend_otp(
         otp = await otp_service.get_or_otp_by_id(verification_id=payload.verification_id)
         user = await user_service.get_user_by_id(user_id=otp.user_id)
 
-        return await otp_service.resend_otp_code(user=user, otp=otp)
+        return await otp_service.validate_and_resend_otp_code(user=user, otp=otp)
     except OtpNotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

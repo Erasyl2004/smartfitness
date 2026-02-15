@@ -2,12 +2,22 @@ from app.dtos.otp_codes import OtpValidateDTO, OtpSuccessDTO, OtpDTO
 from app.dtos.users import UserDTO
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
+from typing import Optional
+from datetime import datetime
 
 @dataclass
 class OtpService(ABC):
 
     @abstractmethod
+    def is_otp_resend_available(self, otp: OtpDTO, now: datetime) -> bool:
+        ...
+
+    @abstractmethod
     async def get_or_otp_by_id(self, verification_id: int) -> OtpDTO:
+        ...
+
+    @abstractmethod
+    async def get_otp_by_user_id(self, user_id: int) -> Optional[OtpDTO]:
         ...
 
     @abstractmethod
@@ -27,11 +37,15 @@ class OtpService(ABC):
         ...
 
     @abstractmethod
+    async def resend_otp_code(self, user: UserDTO, otp: OtpDTO) -> OtpSuccessDTO:
+        ...
+
+    @abstractmethod
     async def process_registration_otp(self, user: UserDTO) -> OtpSuccessDTO:
         ...
 
     @abstractmethod
-    async def resend_otp_code(self, user: UserDTO, otp: OtpDTO) -> OtpSuccessDTO:
+    async def validate_and_resend_otp_code(self, user: UserDTO, otp: OtpDTO) -> OtpSuccessDTO:
         ...
 
     @abstractmethod

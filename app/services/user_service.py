@@ -24,10 +24,13 @@ class UserServiceImpl(UserService):
             return UserDTO.model_validate(user_entity)
 
     async def create_user(self, register_payload: CredentialsDTO) -> UserDTO:
-        is_user_exists = await self.get_user_by_email(email=str(register_payload.email))
+        exists_user = await self.get_user_by_email(email=str(register_payload.email))
 
-        if is_user_exists:
-            raise UserAlreadyExistsException(email=str(register_payload.email))
+        if exists_user:
+            if exists_user.status != UserStatusEnum.PENDING_VERIFICATION:
+                raise UserAlreadyExistsException(email=str(register_payload.email))
+            else:
+                return exists_user
 
         user_base = UserBaseDTO(
             email=register_payload.email,
