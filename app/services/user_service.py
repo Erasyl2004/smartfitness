@@ -38,7 +38,7 @@ class UserServiceImpl(UserService):
             status=UserStatusEnum.PENDING_VERIFICATION
         )
 
-        user_entity = await self.repo.create(entity_data=user_base.model_dump())
+        user_entity = await self.repo.create(entity_data=user_base.model_dump(mode="json"))
         return UserDTO.model_validate(user_entity)
 
     async def activate_user(self, user_id: int) -> UserDTO:

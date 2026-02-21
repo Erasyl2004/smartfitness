@@ -1,5 +1,5 @@
 from app.dtos.body_areas import BodyAreaBaseDTO, BodyAreaDTO
-from app.dtos.exercises import ExerciseDTO
+from app.dtos.exercises import BodyAreaExerciseDTO
 from app.interfaces.services.body_area import BodyAreaService
 from app.interfaces.services.exercise import ExerciseService
 from app.exceptions.body_area import BodyAreaNotFoundException
@@ -40,12 +40,12 @@ async def get_all_body_areas(
     status_code=status.HTTP_200_OK,
     summary="Получить exercises по body area",
     description="Возвращает список всех exercises по ID body area.",
-    response_model=list[ExerciseDTO]
+    response_model=list[BodyAreaExerciseDTO]
 )
 async def get_all_body_areas(
     body_area_id: int,
     exercise_service: FromDishka[ExerciseService],
-) -> list[ExerciseDTO]:
+) -> list[BodyAreaExerciseDTO]:
     return await exercise_service.get_all_body_area_exercises(
         body_area_id=body_area_id
     )

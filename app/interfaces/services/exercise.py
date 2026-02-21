@@ -1,4 +1,4 @@
-from app.dtos.exercises import ExerciseBaseDTO, ExerciseDTO
+from app.dtos.exercises import ExerciseBaseDTO, ExerciseDTO, BodyAreaExerciseDTO, ExerciseDetailDTO
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -12,7 +12,11 @@ class ExerciseService(ABC):
         ...
 
     @abstractmethod
-    async def get_all_body_area_exercises(self, body_area_id: int) -> list[ExerciseDTO]:
+    async def get_exercise_details_by_id(self, exercise_id: int) -> Optional[ExerciseDetailDTO]:
+        ...
+
+    @abstractmethod
+    async def get_all_body_area_exercises(self, body_area_id: int) -> list[BodyAreaExerciseDTO]:
         ...
 
     @abstractmethod

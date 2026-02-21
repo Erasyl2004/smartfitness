@@ -22,7 +22,7 @@ class BodyAreaServiceImpl(BodyAreaService):
         return [BodyAreaDTO.model_validate(entity) for entity in entities]
 
     async def save_body_area(self, body_area: BodyAreaBaseDTO) -> BodyAreaDTO:
-        entity = await self.repo.create(entity_data=body_area.model_dump())
+        entity = await self.repo.create(entity_data=body_area.model_dump(mode="json"))
 
         return BodyAreaDTO.model_validate(entity)
 
