@@ -6,7 +6,9 @@ from app.exceptions.body_area import BodyAreaNotFoundException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
 from fastapi import APIRouter, status, HTTPException
 
+
 router = APIRouter(route_class=DishkaRoute)
+
 
 @router.post(
     "/",

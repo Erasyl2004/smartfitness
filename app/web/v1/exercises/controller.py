@@ -6,7 +6,9 @@ from app.exceptions.exercise import ExerciseNotFoundException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
 from fastapi import APIRouter, status, HTTPException
 
+
 router = APIRouter(route_class=DishkaRoute)
+
 
 @router.get(
     "/{exercise_id}/details",
@@ -29,6 +31,7 @@ async def get_exercise_details_by_id(
 
     return exercise_details
 
+
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
@@ -41,6 +44,7 @@ async def create_exercise(
     exercise_service: FromDishka[ExerciseService]
 ) -> ExerciseDTO:
     return await exercise_service.save_exercise(exercise=payload)
+
 
 @router.post(
     "/{exercise_id}/benefits",
@@ -55,6 +59,7 @@ async def create_benefit(
     benefit_service: FromDishka[BenefitService]
 ) -> BenefitDTO:
     return await benefit_service.save_benefit(exercise_id=exercise_id, benefit_create=payload)
+
 
 @router.put(
     "/{exercise_id}",
@@ -78,6 +83,7 @@ async def update_exercise(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={'error': str(exception)},
         )
+
 
 @router.delete(
     "/{exercise_id}",

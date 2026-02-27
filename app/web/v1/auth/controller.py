@@ -21,8 +21,8 @@ router = APIRouter(route_class=DishkaRoute)
 
 @router.post(
     "/register",
-    summary="создать user",
-    description="создает user-a, отдает otp verification",
+    summary="Создать user",
+    description="Создает user-a, отдает otp verification",
     response_model=OtpSuccessDTO,
     status_code=status.HTTP_201_CREATED
 )
@@ -45,8 +45,8 @@ async def register_user(
 
 @router.post(
     "/register/otp/resend",
-    summary="пере отправить новый otp",
-    description="по verification_id отправляет новый otp user-у",
+    summary="Пере отправить новый otp",
+    description="По verification_id отправляет новый otp user-у",
     response_model=OtpSuccessDTO,
     status_code=status.HTTP_200_OK
 )
@@ -74,8 +74,8 @@ async def resend_otp(
 
 @router.post(
     "/register/otp/confirm",
-    summary="подтвердить otp регистраций",
-    description="подтверждает otp после регистраций, меняет статус user-a на active, отдает access + refresh",
+    summary="Подтвердить otp регистраций",
+    description="Подтверждает otp после регистраций, меняет статус user-a на active, отдает access + refresh",
     response_model=TokenDTO,
     status_code=status.HTTP_200_OK
 )
@@ -106,8 +106,8 @@ async def confirm_otp(
 
 @router.post(
     "/login",
-    summary="аутентификация user",
-    description="аутентифицирует user-a, возвращает access + refresh",
+    summary="Аутентификация user",
+    description="Аутентифицирует user-a, возвращает access + refresh",
     response_model=TokenDTO
 )
 def login_user(
@@ -123,8 +123,8 @@ def login_user(
 
 @router.post(
     "/refresh",
-    summary="рефреш access token",
-    description="по refresh, дает новый access",
+    summary="Рефреш access token",
+    description="По refresh, дает новый access",
     response_model=TokenDTO,
     response_model_exclude_none=True,
 )
@@ -139,8 +139,8 @@ def refresh_user(
 
 @router.get(
     "/me",
-    summary="получить current user",
-    description="по access из bearer, дает current user",
+    summary="Получить current user",
+    description="По access из bearer, дает current user",
 )
 def get_me(
     payload: dict = Depends(get_token_payload_from_header),

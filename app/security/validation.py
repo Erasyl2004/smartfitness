@@ -17,6 +17,12 @@ from starlette import status
 bearer_scheme = HTTPBearer(auto_error=False)
 
 def get_token_payload(token: str) -> dict:
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={'error': "Not authenticated"},
+        )
+
     try:
         payload = decode_jwt(
             token=token,

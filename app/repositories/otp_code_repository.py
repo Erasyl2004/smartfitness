@@ -14,7 +14,7 @@ class OtpCodeRepositoryImpl(
 
     async def get_by_user_id(self, user_id: int) -> Optional[OtpCodeEntity]:
         query = (
-            select(self.entity).where(self.entity.user_id == user_id)
+            select(OtpCodeEntity).where(self.entity.user_id == user_id)
         )
 
         result = await self.session.execute(query)

@@ -3,6 +3,7 @@ from app.database.entities.exercises import ExerciseEntity
 from app.database.entities.users import UserEntity
 from app.database.entities.otp_codes import OtpCodeEntity
 from app.database.entities.benefits import ExerciseBenefitEntity
+from app.database.entities.messages import ChatMessageEntity
 from app.database.core.base import Base
 from app.database.core.settings import DatabaseSettings
 from logging.config import fileConfig
