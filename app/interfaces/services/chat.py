@@ -15,5 +15,9 @@ class ChatMessageService(ABC):
         ...
 
     @abstractmethod
+    async def process_user_message(self, user_id: int, content: str) -> ChatMessageDTO:
+        ...
+
+    @abstractmethod
     async def clear_chat_history(self, user_id: int) -> None:
         ...

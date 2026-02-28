@@ -8,7 +8,7 @@ from app.security.tokens import (
     ACCESS_TOKEN_TYPE,
     REFRESH_TOKEN_TYPE,
 )
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, WebSocket
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dishka.integrations.fastapi import inject, FromDishka
 from jwt import InvalidTokenError
@@ -118,6 +118,29 @@ def get_current_active_auth_user(
         status_code=status.HTTP_403_FORBIDDEN,
         detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
     )
+
+
+async def get_current_active_auth_user_from_websocket(
+    user_service: FromDishka[UserService],
+    websocket: WebSocket,
+    token: str
+) -> UserDTO:
+    try:
+        payload = get_token_payload(token=token)
+    except HTTPException as e:
+        await websocket.close(code=1008, reason=e.detail["error"])
+        raise ValueError(f"{e.detail["error"]}")
+
+    email: str | None = payload.get("sub")
+    if email:
+        user = await user_service.get_user_by_email(email=email)
+
+        if user and user.status == UserStatusEnum.ACTIVE:
+            return user
+
+    await websocket.close(code=1008, reason="token invalid")
+    raise ValueError("token invalid")
+
 
 @inject
 async def validate_auth_user(
