@@ -2,6 +2,7 @@ from app.web.v1.auth.controller import router as auth_router
 from app.web.v1.body_areas.controller import router as body_areas_router
 from app.web.v1.exercises.controller import router as exercises_router
 from app.web.v1.ai_chat.controller import router as ai_chat_router
+from app.web.v1.nutrition.controller import router as nutrition_router
 from app.providers.application import get_providers
 from dishka.integrations.fastapi import setup_dishka as setup_fastapi_dishka
 from dishka import make_async_container
@@ -32,6 +33,11 @@ def app_factory() -> FastAPI:
         router=ai_chat_router,
         prefix="/api/v1/ai-chat",
         tags=["Ai chat"]
+    )
+    app.include_router(
+        router=nutrition_router,
+        prefix="/api/v1/nutritions",
+        tags=["Nutritions"]
     )
 
     return app
