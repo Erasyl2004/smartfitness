@@ -10,5 +10,6 @@ class NutritionEntity(BaseEntity):
     kcal: Mapped[float] = mapped_column(Float, nullable=False)
     protein: Mapped[float] = mapped_column(Float, nullable=False)
     carbs: Mapped[float] = mapped_column(Float, nullable=False)
+    fat: Mapped[float] = mapped_column(Float, nullable=False)
     serving_amount: Mapped[float] = mapped_column(Float, nullable=False)
     serving_unit: Mapped[str] = mapped_column(String(50), nullable=False)

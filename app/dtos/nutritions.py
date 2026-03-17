@@ -7,6 +7,7 @@ class NutritionWeightDTO(BaseModel):
     kcal: float
     protein: float
     carbs: float
+    fat: float
     serving_amount: float
     serving_unit: str
 

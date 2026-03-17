@@ -36,6 +36,7 @@ class NutritionServiceImpl(NutritionService):
                     "protein": 0.0,
                     "carbs": 0.0,
                     "serving_amount": 0.0,
+                    "fat": 0.0,
                     "serving_unit": n.serving_unit,
                     "meals": [],
                 }
@@ -43,6 +44,7 @@ class NutritionServiceImpl(NutritionService):
             calculated[nutrition_date]["kcal"] += n.kcal
             calculated[nutrition_date]["protein"] += n.protein
             calculated[nutrition_date]["carbs"] += n.carbs
+            calculated[nutrition_date]["fat"] += n.fat
             calculated[nutrition_date]["serving_amount"] += n.serving_amount
 
             calculated[nutrition_date]["meals"].append(
@@ -59,6 +61,7 @@ class NutritionServiceImpl(NutritionService):
                     kcal=data["kcal"],
                     protein=data["protein"],
                     carbs=data["carbs"],
+                    fat=data["fat"],
                     serving_amount=data["serving_amount"],
                     serving_unit=data["serving_unit"],
                 ),
