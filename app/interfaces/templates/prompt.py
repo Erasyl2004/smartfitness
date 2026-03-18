@@ -8,3 +8,7 @@ class PromptTemplate(ABC):
     @abstractmethod
     def from_template(self) -> str:
         ...
+
+    @abstractmethod
+    def from_template_calories(self) -> str:
+        ...

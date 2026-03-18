@@ -2,6 +2,7 @@ from app.interfaces.services.ai import AiService
 from app.interfaces.templates.prompt import PromptTemplate
 from app.enums.role import ChatMessageRoleEnum
 from app.dtos.chat_messages import ChatMessageDTO, ChatMessageBaseDTO
+from app.dtos.nutritions import MealNutritionDTO
 from dataclasses import dataclass
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import (
@@ -39,3 +40,20 @@ class AiServiceImpl(AiService):
             role=ChatMessageRoleEnum.FITNESS_ASSISTANT,
             content=ai_msg.content
         )
+
+    async def process_calories(
+        self,
+        food_image_url: str
+    ) -> MealNutritionDTO:
+        calories_prompt = self.prompt_template.from_template_calories()
+        structured_model = self.model.with_structured_output(
+            schema=MealNutritionDTO,
+            method="json_schema"
+        )
+
+        human_message = HumanMessage(content=[
+            {"type": "text", "text": calories_prompt},
+            {"type": "image", "url": food_image_url}
+        ])
+
+        return await structured_model.ainvoke([human_message])

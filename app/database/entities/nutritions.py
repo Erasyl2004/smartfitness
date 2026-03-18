@@ -13,3 +13,4 @@ class NutritionEntity(BaseEntity):
     fat: Mapped[float] = mapped_column(Float, nullable=False)
     serving_amount: Mapped[float] = mapped_column(Float, nullable=False)
     serving_unit: Mapped[str] = mapped_column(String(50), nullable=False)
+    food_image_url: Mapped[str] = mapped_column(String(512), nullable=True)

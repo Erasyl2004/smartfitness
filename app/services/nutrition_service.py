@@ -1,12 +1,19 @@
 from app.interfaces.services.nutrition import NutritionService
-from app.dtos.nutritions import NutritionDTO, CalculateNutritionDTO, NutritionWeightDTO, MealDTO
+from app.interfaces.services.s3 import S3Service
+from app.interfaces.services.ai import AiService
 from app.interfaces.repositories.nutrition import NutritionRepository
+from app.dtos.nutritions import (
+    NutritionBaseDTO, NutritionDTO, CalculateNutritionDTO, NutritionWeightDTO, MealDTO
+)
+from app.exceptions.nutrition import UnprocessableNutritionException
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-
+from fastapi import UploadFile
 
 @dataclass(eq=False)
 class NutritionServiceImpl(NutritionService):
+    s3_service: S3Service
+    ai_service: AiService
     repository: NutritionRepository
 
     async def get_user_week_nutrition(self, user_id: int) -> list[NutritionDTO]:
@@ -71,3 +78,27 @@ class NutritionServiceImpl(NutritionService):
         ]
 
         return result
+
+    async def recognize_nutrition_by_photo(self, user_id: int, photo: UploadFile) -> NutritionDTO:
+        file_data = self.s3_service.upload_image(file=photo)
+        extracted_data = await self.ai_service.process_calories(food_image_url=file_data["file_url"])
+
+        if extracted_data.meal_name:
+            base = NutritionBaseDTO(
+                user_id=user_id,
+                meal_name=extracted_data.meal_name,
+                kcal=extracted_data.kcal,
+                protein=extracted_data.protein,
+                carbs=extracted_data.carbs,
+                fat=extracted_data.fat,
+                serving_amount=extracted_data.serving_amount,
+                food_image_url=file_data["file_url"],
+                serving_unit="g"
+            )
+            entity = await self.repository.create(
+                entity_data=base.model_dump()
+            )
+
+            return NutritionDTO.model_validate(entity)
+
+        raise UnprocessableNutritionException()

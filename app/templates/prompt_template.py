@@ -63,5 +63,38 @@ class PromptTemplateImpl(PromptTemplate):
         """
     )
 
+    template_calories: ClassVar[str] = textwrap.dedent(
+        """
+        You are a food nutrition analysis assistant.
+        
+        Analyze the image and determine whether it contains food.
+        
+        Your task:
+        1. Detect whether the image contains a real food item or meal.
+        2. If it does, estimate and return:
+           - meal_name
+           - kcal
+           - protein
+           - carbs
+           - fat
+           - serving_amount
+        3. If the image does not contain food, the food cannot be identified, or the nutrition cannot be estimated reliably, return:
+           - meal_name as an empty string
+           - all numeric fields as 0
+        
+        Rules:
+        - serving_amount must be the estimated serving size in grams
+        - all numeric values must be greater than or equal to 0
+        - if the food is unknown or not food, set meal_name to an empty string
+        - if the food is unknown or not food, set kcal, protein, carbs, fat, and serving_amount to 0
+        - do not return explanations
+        - do not return markdown
+        - return only valid JSON
+        """
+    )
+
     def from_template(self) -> str:
         return self.template
+
+    def from_template_calories(self) -> str:
+        return self.template_calories
