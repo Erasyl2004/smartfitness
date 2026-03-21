@@ -1,9 +1,13 @@
 from app.interfaces.services.user import UserService
+from app.interfaces.services.profile import UserProfileService
 from app.interfaces.services.otp import OtpService
 from app.security.tokens import create_access_token, create_refresh_token
+from app.enums.user_status import UserStatusEnum
 from app.dtos.users import CredentialsDTO, UserDTO
 from app.dtos.otp_codes import OtpSuccessDTO, OtpValidateDTO, OtpRequestDTO
+from app.dtos.profile import UserProfileBaseDTO, UserProfileDTO
 from app.exceptions.otp import OtpResendTooSoonException, OtpNotFoundException, OtpCodeIsNotValidException
+from app.exceptions.profile import UserProfileAlreadyExistsException
 from app.exceptions.user import UserAlreadyExistsException
 from app.dtos.tokens import TokenDTO
 from app.security.validation import (
@@ -86,7 +90,10 @@ async def confirm_otp(
 ) -> TokenDTO:
     try:
         otp = await otp_service.confirm_registration_otp(request=payload)
-        activated_user = await user_service.activate_user(user_id=otp.user_id)
+        activated_user = await user_service.update_status(
+            user_id=otp.user_id,
+            status=UserStatusEnum.ACTIVE
+        )
     except OtpNotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -135,6 +142,34 @@ def refresh_user(
     return TokenDTO(
         access_token=access_token,
     )
+
+
+@router.post(
+    "/onbording",
+    summary="Создать profile",
+    description="Сохраняет данные user-a, gender, height, weight, и тд",
+    response_model=UserProfileDTO
+)
+async def create_profile(
+    payload: UserProfileBaseDTO,
+    profile_service: FromDishka[UserProfileService],
+    user: UserDTO = Depends(get_current_active_auth_user)
+) -> UserProfileDTO:
+
+    try:
+        profile = await profile_service.create_profile(
+            user_id=user.id,
+            profile=payload
+        )
+    except UserProfileAlreadyExistsException as e:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                'error': str(e)
+            }
+        )
+
+    return profile
 
 
 @router.get(

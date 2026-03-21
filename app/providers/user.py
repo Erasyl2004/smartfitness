@@ -2,17 +2,21 @@ from app.interfaces.repositories.user import UserRepository
 from app.interfaces.repositories.otp_code import OtpCodeRepository
 from app.interfaces.repositories.chat_message import ChatMessageRepository
 from app.interfaces.repositories.nutrition import NutritionRepository
+from app.interfaces.repositories.profile import UserProfileRepository
 from app.interfaces.services.user import UserService
+from app.interfaces.services.profile import UserProfileService
 from app.interfaces.services.otp import OtpService
 from app.interfaces.services.chat import ChatMessageService
 from app.interfaces.services.nutrition import NutritionService
 from app.interfaces.templates.otp import OtpTemplate
 from app.web.settings import OtpSettings
 from app.repositories.user_repository import UserRepositoryImpl
+from app.repositories.user_profile_repository import UserProfileRepositoryImpl
 from app.repositories.otp_code_repository import OtpCodeRepositoryImpl
 from app.repositories.message_repository import ChatMessageRepositoryImpl
 from app.repositories.nutrition_repository import NutritionRepositoryImpl
 from app.services.user_service import UserServiceImpl
+from app.services.profile_service import UserProfileServiceImpl
 from app.services.otp_service import OtpServiceImpl
 from app.services.chat_service import ChatMessageServiceImpl
 from app.services.nutrition_service import NutritionServiceImpl
@@ -81,4 +85,16 @@ class UserProvider(Provider):
         source=ChatMessageServiceImpl,
         scope=Scope.REQUEST,
         provides=ChatMessageService
+    )
+
+    profile_repository = provide(
+        source=UserProfileRepositoryImpl,
+        scope=Scope.REQUEST,
+        provides=UserProfileRepository
+    )
+
+    profile_service = provide(
+        source=UserProfileServiceImpl,
+        scope=Scope.REQUEST,
+        provides=UserProfileService
     )

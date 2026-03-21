@@ -1,6 +1,7 @@
 from app.interfaces.templates.prompt import PromptTemplate
+from app.dtos.profile import UserProfileDTO
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, Optional
 import textwrap
 
 
@@ -9,6 +10,9 @@ class PromptTemplateImpl(PromptTemplate):
     template: ClassVar[str] = textwrap.dedent(
         """
         Ты — профессиональный фитнес-ассистент и персональный тренер.
+        
+        Данные пользователя:
+        {user_data}
 
         Твоя зона ответственности:
         - тренировки (силовые, кардио, растяжка, функционал)
@@ -93,8 +97,23 @@ class PromptTemplateImpl(PromptTemplate):
         """
     )
 
-    def from_template(self) -> str:
-        return self.template
+    def from_template(self, profile: Optional[UserProfileDTO]) -> str:
+        if profile:
+            user_data = textwrap.dedent(
+                f"""
+                возраст: {profile.age} лет
+                рост: {profile.height} см
+                вес: {profile.weight} кг
+                пол: {profile.gender.value}
+                мастерство: {profile.activity_level.value}
+                цель: {profile.goal.value}
+                """
+            )
+            return self.template.format(user_data=user_data)
+
+        return self.template.format(
+            user_data="-"
+        )
 
     def from_template_calories(self) -> str:
         return self.template_calories

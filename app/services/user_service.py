@@ -41,11 +41,11 @@ class UserServiceImpl(UserService):
         user_entity = await self.repo.create(entity_data=user_base.model_dump())
         return UserDTO.model_validate(user_entity)
 
-    async def activate_user(self, user_id: int) -> UserDTO:
+    async def update_status(self, user_id: int, status: UserStatusEnum) -> UserDTO:
         user_entity = await self.repo.update(
             entity_id=user_id,
             entity_data={
-                "status": UserStatusEnum.ACTIVE
+                "status": status
             }
         )
 

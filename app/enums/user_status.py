@@ -4,3 +4,4 @@ class UserStatusEnum(StrEnum):
     ACTIVE = auto()
     INACTIVE = auto()
     PENDING_VERIFICATION = auto()
+    NEED_ONBORDING = auto()

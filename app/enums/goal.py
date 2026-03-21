@@ -1,0 +1,7 @@
+from enum import StrEnum
+
+class UserGoalEnum(StrEnum):
+    LOOSE_WEIGHT = "LOOSE_WEIGHT"
+    BUILD_MUSCLE = "BUILD_MUSCLE"
+    STAY_FIT = "STAY_FIT"
+    IMPROVE_FLEXIBILITY = "IMPROVE_FLEXIBILITY"

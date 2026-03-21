@@ -9,12 +9,13 @@ from abc import ABC, abstractmethod
 class AiService(ABC):
 
     @abstractmethod
-    def to_lc_messages(self, chat_messages: list[ChatMessageDTO]) -> list[BaseMessage]:
+    async def to_lc_messages(self, user_id: int, chat_messages: list[ChatMessageDTO]) -> list[BaseMessage]:
         ...
 
     @abstractmethod
     async def run_fitness_assistant(
         self,
+        user_id: int,
         chat_messages: list[ChatMessageDTO],
     ) -> ChatMessageBaseDTO:
         ...

@@ -1,4 +1,5 @@
 from app.interfaces.services.ai import AiService
+from app.interfaces.services.profile import UserProfileService
 from app.interfaces.templates.prompt import PromptTemplate
 from app.enums.role import ChatMessageRoleEnum
 from app.dtos.chat_messages import ChatMessageDTO, ChatMessageBaseDTO
@@ -16,10 +17,12 @@ from langchain_core.messages import (
 @dataclass(eq=False)
 class AiServiceImpl(AiService):
     model: ChatGoogleGenerativeAI
+    profile_service: UserProfileService
     prompt_template: PromptTemplate
 
-    def to_lc_messages(self, chat_messages: list[ChatMessageDTO]) -> list[BaseMessage]:
-        out: list[BaseMessage] = [SystemMessage(content=self.prompt_template.from_template())]
+    async def to_lc_messages(self, user_id: int, chat_messages: list[ChatMessageDTO]) -> list[BaseMessage]:
+        profile = await self.profile_service.get_profile_by_user_id(user_id=user_id)
+        out: list[BaseMessage] = [SystemMessage(content=self.prompt_template.from_template(profile=profile))]
 
         for m in chat_messages:
             if m.role == ChatMessageRoleEnum.USER:
@@ -31,9 +34,10 @@ class AiServiceImpl(AiService):
 
     async def run_fitness_assistant(
         self,
+        user_id: int,
         chat_messages: list[ChatMessageDTO],
     ) -> ChatMessageBaseDTO:
-        lc_messages = self.to_lc_messages(chat_messages=chat_messages)
+        lc_messages = await self.to_lc_messages(user_id=user_id, chat_messages=chat_messages)
         ai_msg = await self.model.ainvoke(lc_messages)
 
         return ChatMessageBaseDTO(

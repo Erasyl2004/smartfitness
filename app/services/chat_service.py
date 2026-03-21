@@ -40,6 +40,7 @@ class ChatMessageServiceImpl(ChatMessageService):
         chat_history = await self.get_all_chat_messages(user_id=user_id)
 
         assistant_message = await self.ai_service.run_fitness_assistant(
+            user_id=user_id,
             chat_messages=chat_history
         )
 

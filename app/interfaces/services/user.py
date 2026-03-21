@@ -1,3 +1,4 @@
+from app.enums.user_status import UserStatusEnum
 from app.dtos.users import CredentialsDTO, UserDTO
 from dataclasses import dataclass
 from typing import Optional
@@ -19,5 +20,5 @@ class UserService(ABC):
         ...
 
     @abstractmethod
-    async def activate_user(self, user_id: int) -> UserDTO:
+    async def update_status(self, user_id: int, status: UserStatusEnum) -> UserDTO:
         ...

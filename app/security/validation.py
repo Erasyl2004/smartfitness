@@ -3,6 +3,7 @@ from app.interfaces.services.user import UserService
 from app.security.crypto import decode_jwt, validate_cred
 from app.dtos.users import CredentialsDTO, UserDTO
 from app.dtos.tokens import RefreshTokenInDTO
+from app.exceptions.user import get_user_status_error
 from app.security.tokens import (
     TOKEN_TYPE_FIELD,
     ACCESS_TOKEN_TYPE,
@@ -97,7 +98,7 @@ class UserGetterFromRefreshToken:
                     return user
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
+                    detail={'error': get_user_status_error(status=user.status)}
                 )
 
         raise HTTPException(
@@ -116,7 +117,7 @@ def get_current_active_auth_user(
         return user
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
+        detail={'error': get_user_status_error(status=user.status)}
     )
 
 
@@ -163,10 +164,10 @@ async def validate_auth_user(
     ):
         raise unauthed_exc
 
-    if user.status != UserStatusEnum.ACTIVE:
+    if user.status not in (UserStatusEnum.ACTIVE, UserStatusEnum.NEED_ONBORDING):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={'error':"user inactive" if user.status == UserStatusEnum.INACTIVE else "need otp verification"}
+            detail={'error': get_user_status_error(status=user.status)}
         )
 
     return user
