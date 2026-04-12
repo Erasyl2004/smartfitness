@@ -5,7 +5,7 @@ from app.security.tokens import create_access_token, create_refresh_token
 from app.enums.user_status import UserStatusEnum
 from app.dtos.users import CredentialsDTO, UserDTO
 from app.dtos.otp_codes import OtpSuccessDTO, OtpValidateDTO, OtpRequestDTO
-from app.dtos.profile import UserProfileBaseDTO, UserProfileDTO
+from app.dtos.profile import UserProfileBaseDTO, UserProfileDTO, UserWeekProfileDTO
 from app.exceptions.otp import OtpResendTooSoonException, OtpNotFoundException, OtpCodeIsNotValidException
 from app.exceptions.profile import UserProfileAlreadyExistsException
 from app.exceptions.user import UserAlreadyExistsException
@@ -186,3 +186,15 @@ def get_me(
         "email": user.email,
         "logged_in_at": iat
     }
+
+@router.get(
+    "/me/profile",
+    summary="Получить профиль current user",
+    description="Возвращает данные профиля current user для отображения страницы кабинета",
+    response_model=UserWeekProfileDTO
+)
+async def get_profile(
+    profile_service: FromDishka[UserProfileService],
+    user: UserDTO = Depends(get_current_active_auth_user)
+) -> UserWeekProfileDTO:
+    return await profile_service.get_user_week_nutrition_profile(user=user)

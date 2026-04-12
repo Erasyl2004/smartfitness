@@ -1,4 +1,5 @@
 from app.interfaces.services.chat import ChatMessageService
+from app.interfaces.services.profile import UserProfileService
 from app.interfaces.services.ai import AiService
 from app.interfaces.repositories.chat_message import ChatMessageRepository
 from app.enums.role import ChatMessageRoleEnum
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 @dataclass(eq=False)
 class ChatMessageServiceImpl(ChatMessageService):
     ai_service: AiService
+    profile_service: UserProfileService
     repo: ChatMessageRepository
 
     async def get_all_chat_messages(self, user_id: int) -> list[ChatMessageDTO]:
@@ -38,9 +40,11 @@ class ChatMessageServiceImpl(ChatMessageService):
             )
         )
         chat_history = await self.get_all_chat_messages(user_id=user_id)
+        profile = await self.profile_service.get_profile_by_user_id(user_id=user_id)
 
         assistant_message = await self.ai_service.run_fitness_assistant(
             user_id=user_id,
+            profile=profile,
             chat_messages=chat_history
         )
 

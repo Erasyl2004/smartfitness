@@ -41,3 +41,11 @@ class CalculateNutritionDTO(BaseModel):
     nutrition_date: date
     weight: NutritionWeightDTO
     meals: list[MealDTO]
+
+class CalculateWeekProfileNutritionDTO(BaseModel):
+    total_kcal: float = 0.0
+    out_of_kcal: float = 10000.0
+    total_protein: float = 0.0
+    total_carbs: float = 0.0
+    total_fats: float = 0.0
+    total_serving_amount: float = 0.0

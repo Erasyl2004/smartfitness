@@ -1,4 +1,4 @@
-from app.dtos.nutritions import NutritionDTO, CalculateNutritionDTO
+from app.dtos.nutritions import NutritionDTO, CalculateNutritionDTO, CalculateWeekProfileNutritionDTO
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from fastapi import UploadFile
@@ -13,6 +13,10 @@ class NutritionService(ABC):
 
     @abstractmethod
     async def calculate_user_nutrition(self, user_id: int) -> list[CalculateNutritionDTO]:
+        ...
+
+    @abstractmethod
+    async def get_user_week_profile_nutrition(self, user_id: int) -> CalculateWeekProfileNutritionDTO:
         ...
 
     @abstractmethod

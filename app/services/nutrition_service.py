@@ -3,7 +3,7 @@ from app.interfaces.services.s3 import S3Service
 from app.interfaces.services.ai import AiService
 from app.interfaces.repositories.nutrition import NutritionRepository
 from app.dtos.nutritions import (
-    NutritionBaseDTO, NutritionDTO, CalculateNutritionDTO, NutritionWeightDTO, MealDTO
+    NutritionBaseDTO, NutritionDTO, CalculateNutritionDTO, NutritionWeightDTO, MealDTO, CalculateWeekProfileNutritionDTO
 )
 from app.exceptions.nutrition import UnprocessableNutritionException
 from dataclasses import dataclass
@@ -78,6 +78,19 @@ class NutritionServiceImpl(NutritionService):
         ]
 
         return result
+
+    async def get_user_week_profile_nutrition(self, user_id: int) -> CalculateWeekProfileNutritionDTO:
+        week_nutrition = await self.calculate_user_nutrition(user_id=user_id)
+        profile_nutrition = CalculateWeekProfileNutritionDTO()
+
+        for n in week_nutrition:
+            profile_nutrition.total_kcal += n.weight.kcal
+            profile_nutrition.total_protein += n.weight.protein
+            profile_nutrition.total_carbs += n.weight.carbs
+            profile_nutrition.total_fats += n.weight.fat
+            profile_nutrition.total_serving_amount += n.weight.serving_amount
+
+        return profile_nutrition
 
     async def recognize_nutrition_by_photo(self, user_id: int, photo: UploadFile) -> NutritionDTO:
         file_data = self.s3_service.upload_image(file=photo)
