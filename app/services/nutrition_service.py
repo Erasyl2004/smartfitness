@@ -5,8 +5,13 @@ from app.interfaces.repositories.nutrition import NutritionRepository
 from app.dtos.nutritions import (
     NutritionBaseDTO, NutritionDTO, CalculateNutritionDTO, NutritionWeightDTO, MealDTO, CalculateWeekProfileNutritionDTO
 )
+from app.dtos.profile import UserProfileDTO
+from app.enums.gender import UserGenderEnum
+from app.enums.activity import UserPhysicalActivityEnum
+from app.enums.goal import UserGoalEnum
 from app.exceptions.nutrition import UnprocessableNutritionException
 from dataclasses import dataclass
+from typing import ClassVar
 from datetime import datetime, timedelta
 from fastapi import UploadFile
 
@@ -15,6 +20,18 @@ class NutritionServiceImpl(NutritionService):
     s3_service: S3Service
     ai_service: AiService
     repository: NutritionRepository
+
+    activity_map: ClassVar[dict[UserPhysicalActivityEnum, float]] = {
+        UserPhysicalActivityEnum.BEGINNER: 1.375,
+        UserPhysicalActivityEnum.INTERMEDIATE: 1.55,
+        UserPhysicalActivityEnum.ADVANCED: 1.725
+    }
+    goal_map: ClassVar[dict[UserGoalEnum, float]] = {
+        UserGoalEnum.LOOSE_WEIGHT: 0.85,
+        UserGoalEnum.BUILD_MUSCLE: 1.10,
+        UserGoalEnum.STAY_FIT: 1.0,
+        UserGoalEnum.IMPROVE_FLEXIBILITY: 1.0
+    }
 
     async def get_user_week_nutrition(self, user_id: int) -> list[NutritionDTO]:
         now = datetime.now()
@@ -79,9 +96,26 @@ class NutritionServiceImpl(NutritionService):
 
         return result
 
-    async def get_user_week_profile_nutrition(self, user_id: int) -> CalculateWeekProfileNutritionDTO:
+    def calculate_user_week_out_of_calories(self, user_profile: UserProfileDTO) -> float:
+        if user_profile.gender == UserGenderEnum.MALE:
+            bmr = 10 * user_profile.weight + 6.25 * user_profile.height - 5 * user_profile.age + 5
+        else:
+            bmr = 10 * user_profile.weight + 6.25 * user_profile.height - 5 * user_profile.age - 161
+
+        activity_multiplier = self.activity_map[user_profile.activity_level]
+        tdee = bmr * activity_multiplier
+
+        goal_multiplier = self.goal_map[user_profile.goal]
+        daily_calories = tdee * goal_multiplier
+
+        weekly_calories = daily_calories * 7
+        return round(weekly_calories / 100) * 100
+
+    async def get_user_week_profile_nutrition(self, user_id: int, user_profile: UserProfileDTO) -> CalculateWeekProfileNutritionDTO:
         week_nutrition = await self.calculate_user_nutrition(user_id=user_id)
-        profile_nutrition = CalculateWeekProfileNutritionDTO()
+        weekly_calories_out_of = self.calculate_user_week_out_of_calories(user_profile=user_profile)
+
+        profile_nutrition = CalculateWeekProfileNutritionDTO(out_of_kcal=weekly_calories_out_of)
 
         for n in week_nutrition:
             profile_nutrition.total_kcal += n.weight.kcal

@@ -44,7 +44,7 @@ class CalculateNutritionDTO(BaseModel):
 
 class CalculateWeekProfileNutritionDTO(BaseModel):
     total_kcal: float = 0.0
-    out_of_kcal: float = 10000.0
+    out_of_kcal: float
     total_protein: float = 0.0
     total_carbs: float = 0.0
     total_fats: float = 0.0
